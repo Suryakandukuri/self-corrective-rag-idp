@@ -1,0 +1,57 @@
+from langchain_community.vectorstores import Chroma
+from langchain.text_splitter import TokenTextSplitter
+from langchain_community.embeddings import HuggingFaceBgeEmbeddings
+from dotenv import load_dotenv
+import os
+import json
+import chromadb
+from utils.data_gatherer import fetch_ckan_package_data
+
+load_dotenv()
+
+class RAG:
+    def __init__(self) -> None:
+        self.emb_model = "BAAI/bge-base-en-v1.5"
+        self.vector_store_path = os.getenv('VECTOR_STORE')
+        self.chroma_client = chromadb.PersistentClient(path=self.vector_store_path)
+        self.collection_name = "idp_search"
+
+    def get_embedding_model(self, emb_model):
+        model_kwargs = {'device': 'cpu'}
+        encode_kwargs = {'normalize_embeddings': True}
+        return HuggingFaceBgeEmbeddings(
+            model_name=emb_model,
+            model_kwargs=model_kwargs,
+            encode_kwargs=encode_kwargs
+        )
+
+    def split_docs(self, docs):
+        text_splitter = TokenTextSplitter(chunk_size=500, chunk_overlap=0)
+        return text_splitter.split_documents(docs)
+
+    def populate_vector_db(self):
+        documents = fetch_ckan_package_data()
+        
+        # Create or get the collection
+        try:
+            collection = self.chroma_client.get_collection(self.collection_name)
+        except:
+            collection = self.chroma_client.create_collection(self.collection_name)
+
+        # Process and add documents to ChromaDB
+        for doc in documents:
+            collection.add(
+                documents=[doc['text']],
+                metadatas=[doc['metadata']],
+                ids=[doc['metadata']['sku']]
+            )
+
+    def load_vector_db(self):
+        return Chroma(
+            client=self.chroma_client,
+            collection_name=self.collection_name,
+            embedding_function=self.emb_model
+        )
+
+    def get_retriever(self):
+        return self.load_vector_db().as_retriever()
