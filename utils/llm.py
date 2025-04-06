@@ -1,8 +1,7 @@
 import os
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
-from langchain_community.embeddings import HuggingFaceEmbeddings  # Alternative embedding
-
+from langchain_community.embeddings import HuggingFaceEmbeddings
 class LLM:
     def __init__(self) -> None:
         load_dotenv()
@@ -10,7 +9,7 @@ class LLM:
 
     def get_embeddings(self):
         """Open-source alternative without Azure dependencies"""
-        return HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+        return HuggingFaceEmbeddings(model_name="BAAI/bge-base-en-v1.5")
 
     def get_groq_llm(self):
         """
