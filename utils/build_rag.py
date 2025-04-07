@@ -67,4 +67,5 @@ class RAG:
         )
 
     def get_retriever(self):
-        return self.load_vector_db().as_retriever(k=20)
+        return self.load_vector_db().as_retriever(search_type="mmr",
+                search_kwargs={'k': 10, 'lambda_mult': 0.25})

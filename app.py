@@ -45,15 +45,18 @@ grade_prompt = ChatPromptTemplate.from_messages(
 
 retrieval_grader = grade_prompt | structured_llm_grader
 # %%
-question = "electricity"
+question = "black magic"
 
 docs = retriever.invoke(question)
 
 for doc in docs:
+    print(doc.metadata)
     doc_text = doc.page_content
-    print(doc_text)
-# doc_txt = docs[1].page_content
-# print(doc_txt)
-
-# print(retrieval_grader.invoke({"question": question, "document": doc_txt}))
+    grade = retrieval_grader.invoke({"question": question, "document": doc_text})
+    if grade.binary_score == "yes":
+        print("This could be relevant to your question")
+        print(doc.metadata)
+        print(doc_text)
+        # print(doc_text)
+        print("\n")
 # %%
